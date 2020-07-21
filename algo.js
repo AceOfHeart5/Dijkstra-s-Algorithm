@@ -1,4 +1,3 @@
-
 // Dijkstra's Algorithm
 
 /* The point of this algorithm is to find the shortest distance in a weighted
@@ -13,9 +12,11 @@ const Nodes = {
     drum_set: "drum_set",
     piano: "piano"
 }
-
 Object.freeze(Nodes); // ensures the enum cannot change
 
+/* This is reduced syntax for setting up a nested map. Note that the map constructor 
+only accepts one argument, which is an array of short [key, value] arrays. So any map
+created actually accepts a 2D array as it's argument, hence the huge number of []s. */
 const graph = new Map([
     [Nodes.book, new Map([
         [Nodes.rare_lp, 5],
@@ -38,31 +39,14 @@ const graph = new Map([
     [Nodes.piano, new Map()]
 ]);
 
-// less pretty waay of setting up graph
-// now we'll add the nodes to our graph
-// const graph = new Map();
-// graph.set(Nodes.book, new Map());
-// graph.set(Nodes.rare_lp, new Map());
-// graph.set(Nodes.poster, new Map());
-// graph.set(Nodes.bass_guitar, new Map());
-// graph.set(Nodes.drum_set, new Map());
-// graph.set(Nodes.piano, new Map()); // note we leave this empty
-
-// // now we define the edges for the nodes in our graph
-// graph.get(Nodes.book).set(Nodes.rare_lp, 5);
-// graph.get(Nodes.book).set(Nodes.poster, 0);
-// graph.get(Nodes.rare_lp).set(Nodes.bass_guitar, 15);
-// graph.get(Nodes.rare_lp).set(Nodes.drum_set, 20);
-// graph.get(Nodes.poster).set(Nodes.bass_guitar, 30);
-// graph.get(Nodes.poster).set(Nodes.drum_set, 35);
-// graph.get(Nodes.bass_guitar).set(Nodes.piano, 20);
-// graph.get(Nodes.drum_set).set(Nodes.piano, 10);
-
-// recall that the callback function when using forEach on a map follows (value, key)
-
-// returns the node enum with the lowest cost in the map
+/* In this function, cost is a map of keys and values, and processed is an array of
+keys that have already been processed. This function returns the key with the lowest
+cost of all entries in cost that are not in processed. */
 const findLowestCost = function(cost, processed) {
     let lowest = null;
+
+    /* Recall that the callback function when using forEach on a map 
+    follows (value, key). */
     cost.forEach((val, key) => {
 
         // we ignore nodes (keys) which are already processed
@@ -71,7 +55,7 @@ const findLowestCost = function(cost, processed) {
             // if lowest is still null, we haven't found our first value yet
             if (lowest === null) lowest = key;
 
-            // if the current val is less than lowest, replace it
+            // if the current val is less than lowest, val is the new lowest
             if (val < cost.get(lowest)) lowest = key;
         }
     });
@@ -79,26 +63,30 @@ const findLowestCost = function(cost, processed) {
 }
 
 // here is Dijkstra's Algorithm:
-const dijkstra = function(start, graph) {
+const dijkstra = function(graph, start, end) {
 
-    /* There are 2 key maps we need to keep track of data while traversing the graph:
-    a map of the cost to each node from the start, and a map of parent nodes determined
-    by cost. */
+    /* There are 2 maps we need to keep track of data while traversing the graph: a map 
+    of the cost to each node from the start, and a map of parent nodes determined by 
+    cost. */
     const cost = new Map();
     const parents = new Map();
+
     // we also need a resizable array to keep track of nodes that have been "processed"
     const processed = [];
 
-    // first we need to add the neighbors of the root to the cost map
+    /* First we need to add the neighbors of the root to the cost map, and set their 
+    parents. */
     graph.get(start).forEach((edgeValue, neighbor) => {
         cost.set(neighbor, graph.get(start).get(neighbor));
         parents.set(neighbor, start);
     });
 
-    /* Now comes the meat of the algorithm. Until no nodes remain in the cost map,
-    we must select the lowest cost node from the cost map, and process it, until 
-    no nodes remain in the cost map. */
+    /* Now comes the meat of the algorithm. We process each node in the graph. Note that
+    we are checking the size graph.size - 1 because we have already processed the start
+    node. */
     while (processed.length < graph.size - 1) {
+
+        // We begin by finding the lowest cost, unprocessed node.
         let node = findLowestCost(cost, processed);
 
         /* Now we set the costs of all neighbors of this node, but only if the cost
@@ -115,18 +103,23 @@ const dijkstra = function(start, graph) {
                 /* Note the above if statement. We only check for a lower cost if the
                 node has not already been processed. */
                 if (costThruNode < cost.get(neighbor)) {
-                    /* If the cost through the current node to the neighbor is lower that
-                    the value in costs, we overwrite the value, and set this node as the
+                    /* If the cost through the current node to the neighbor is lower than
+                    the value in cost, we overwrite the value, and set this node as the
                     parent node of the nieighbor. */
                     cost.set(neighbor, costThruNode);
                     parents.set(neighbor, node);
                 }
             }
         });
+
         // mark node as processed
         processed.push(node);
     }
 
+    /* Now the entire graph has been processed and we can return our results. Firstly, if
+    there is no cost logged for `end`, then there was no path from `start` to `end`. */
+    if (!cost.has(end)) return ``;
+    let results = `The shortest path from ${start} to ${end} is: `;
     return {
         "costs": cost,
         "path": parents
@@ -134,5 +127,3 @@ const dijkstra = function(start, graph) {
 }
 
 console.log(dijkstra(Nodes.book, graph));
-
-console.log("test");
