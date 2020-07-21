@@ -118,12 +118,17 @@ const dijkstra = function(graph, start, end) {
 
     /* Now the entire graph has been processed and we can return our results. Firstly, if
     there is no cost logged for `end`, then there was no path from `start` to `end`. */
-    if (!cost.has(end)) return ``;
-    let results = `The shortest path from ${start} to ${end} is: `;
-    return {
-        "costs": cost,
-        "path": parents
+    if (!cost.has(end)) return `There is no path from ${start} to ${end}`;
+
+    // Return path otherwise
+    let path = "";
+    let temp = end;
+    while (temp != start) {
+        path = ", " + temp + path;
+        temp = parents.get(temp);
     }
+    path = start + path;
+    return "Weight " + cost.get(end) + " path: " + path;
 }
 
-console.log(dijkstra(Nodes.book, graph));
+console.log(dijkstra(graph, Nodes.book, Nodes.piano));
